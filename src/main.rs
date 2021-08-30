@@ -10,9 +10,11 @@ fn main() {
                 n => println!("Found {} ports:", n),
             };
 
+            // list all serial port devices
             let mut i: u32 = 0;
             for port in ports {
                 print!("{}. ", i);
+                i += 1;
                 match port.port_type {
                     SerialPortType::UsbPort(info) => {
                         println!("{}: {}", port.port_name, info.product.unwrap())
@@ -27,11 +29,11 @@ fn main() {
                         println!("{}: Unknown", port.port_name);
                     }
                 }
-                i += 1;
             }
         }
         Err(err) => panic!("Failed to get ports: {}", err)
     }
+    // get device user wants to sent messages to
     print!("Port to use (number): ");
     std::io::stdout().flush().expect("Failed to flush stdout");
     let mut port = String::new();
@@ -40,6 +42,7 @@ fn main() {
     let port: usize = port.trim().parse().expect("Not a number");
     let port = available_ports().unwrap().get(port).unwrap().clone().port_name;
 
+    // open serial connection
     let mut serial = match serialport::new(port, 9600).open() {
         Ok(val) => val,
         Err(err) => panic!("Failed to start connection: {}", err)
@@ -51,6 +54,7 @@ fn main() {
         let mut data = String::new();
         std::io::stdin().read_line(&mut data).expect("Failed to read port");
 
+        // send message inputted by user
         serial.write_all(data.trim().as_bytes()).expect("Failed to write");
     }
 }
